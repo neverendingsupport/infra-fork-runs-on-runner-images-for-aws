@@ -15,10 +15,10 @@ usage = Slop::Options.new do |opts|
   opts.banner = "Usage: #{$0} --image-id [IMAGE_ID]"
 
   opts.string '--image-id', 'Image ID', required: true
-  opts.string '--image-prefix', 'Image Prefix', default: ENV.fetch('AMI_PREFIX', "runs-on-dev")
+  opts.string '--image-prefix', 'Image Prefix', default: ENV.fetch('AMI_PREFIX', "herodevs")
   opts.string '--image-version', 'Image Version', default: Time.now.strftime("%Y%m%d%H%M%S")
   opts.string '--subnet-id', 'Subnet ID', default: ENV.fetch('SUBNET_ID', nil)
-  opts.string '--region', 'Region', default: ENV.fetch('AWS_DEFAULT_REGION', "us-east-1")
+  opts.string '--region', 'Region', default: ENV.fetch('AWS_DEFAULT_REGION', "us-east-2")
   opts.boolean '--debug', 'Debug mode', default: false
 end
 

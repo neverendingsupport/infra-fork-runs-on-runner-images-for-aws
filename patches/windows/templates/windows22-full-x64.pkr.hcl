@@ -110,10 +110,15 @@ source "amazon-ebs" "build_ebs" {
   ami_description                           = "${var.ami_description}"
   ami_virtualization_type                   = "hvm"
   # make AMIs publicly accessible
-  ami_groups                                = ["all"]
+  #DS# ami_groups                                = ["all"]
   ebs_optimized                             = true
   # spot_instance_types                       = ["c6a.metal", "m6a.metal", "c6i.metal", "m6i.metal", "c7i.metal-24xl", "m7i.metal-24xl"]
-  instance_type                             = "m7a.large"
+  #DS# instance_type                             = "m7a.large"
+  # price-capacity sorts by least likely to be interrupted, then lowest price
+  spot_allocation_strategy                  = "price-capacity-optimized"
+  ##spot_instance_types                       = ["c8i.metal-48xl", "m8i.metal-48xl", "r7iz.metal-16xl", "r7iz.metal-32xl", "r8i.metal-48xl", "z1d.metal", "m5zn.metal", "m8a.metal-24xl", "m8a.metal-48xl", "x2iezn.metal"]
+  spot_instance_types                       = ["z1d.metal", "m5zn.metal", "m8a.metal-24xl", "m8a.metal-48xl", "x2iezn.metal"]
+  spot_price                                = "auto"
   region                                    = "${var.region}"
   subnet_id                                 = "${var.subnet_id}"
   associate_public_ip_address               = "true"
@@ -183,18 +188,18 @@ EOF
   }
 
   run_tags = {
-    creator     = "RunsOn"
-    contact     = "ops@runs-on.com"
+    creator     = "HeroDevs"
+    contact     = "nes.ops@herodevs.com"
   }
 
   tags = {
-    creator     = "RunsOn"
-    contact     = "ops@runs-on.com"
+    creator     = "HeroDevs"
+    contact     = "nes.ops@herodevs.com"
   }
 
   snapshot_tags = {
-    creator     = "RunsOn"
-    contact     = "ops@runs-on.com"
+    creator     = "HeroDevs"
+    contact     = "nes.ops@herodevs.com"
   }
 
   source_ami_filter {
@@ -434,7 +439,7 @@ build {
     elevated_user     = "${var.install_user}"
     environment_vars  = ["IMAGE_FOLDER=${var.image_folder}", "TEMP_DIR=${var.temp_dir}"]
     scripts           = [
-      "${path.root}/../scripts/build/Install-WindowsUpdates.ps1",
+      #DS# "${path.root}/../scripts/build/Install-WindowsUpdates.ps1",
       "${path.root}/../scripts/build/Configure-DynamicPort.ps1",
       "${path.root}/../scripts/build/Configure-GDIProcessHandleQuota.ps1",
       "${path.root}/../scripts/build/Configure-Shell.ps1",
@@ -453,7 +458,7 @@ build {
     pause_before     = "2m0s"
     environment_vars = ["IMAGE_FOLDER=${var.image_folder}", "TEMP_DIR=${var.temp_dir}"]
     scripts          = [
-      # "${path.root}/../scripts/build/Install-WindowsUpdatesAfterReboot.ps1",
+      #DS# "${path.root}/../scripts/build/Install-WindowsUpdatesAfterReboot.ps1",
       "${path.root}/../scripts/build/Invoke-Cleanup.ps1",
       # "${path.root}/../scripts/tests/RunAll-Tests.ps1"
     ]

@@ -177,18 +177,18 @@ EOF
   }
 
   run_tags = {
-    creator     = "RunsOn"
-    contact     = "ops@runs-on.com"
+    creator     = "HeroDevs"
+    contact     = "nes.ops@herodevs.com"
   }
 
   tags = {
-    creator     = "RunsOn"
-    contact     = "ops@runs-on.com"
+    creator     = "HeroDevs"
+    contact     = "nes.ops@herodevs.com"
   }
 
   snapshot_tags = {
-    creator     = "RunsOn"
-    contact     = "ops@runs-on.com"
+    creator     = "HeroDevs"
+    contact     = "nes.ops@herodevs.com"
   }
 
   source_ami_filter {

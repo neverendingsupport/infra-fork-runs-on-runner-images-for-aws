@@ -78,7 +78,7 @@ def copy_ami_to_regions(ami_id_or_name, regions, force = false)
       source_image_id: ami_id,
       copy_image_tags: true,
       name: name,
-      description: "RunsOn copy of #{ami_id} to #{region}",
+      description: "HeroDevs copy of #{ami_id} to #{region}",
     })
 
     res = {client: ec2, region: region, image_id: response.image_id}

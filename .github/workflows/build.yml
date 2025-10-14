@@ -24,6 +24,9 @@ jobs:
   build:
     name: Build ${{ inputs.image_id }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     env:
       SUBNET_ID: ${{ secrets.SUBNET_ID }}
     outputs:
@@ -42,11 +45,12 @@ jobs:
           ruby-version: 3.2.2
           bundler-cache: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          role-to-assume: ${{ vars.aws_oidc_role_arn }}
+          role-session-name: ${{ env.GITHUB_WORKFLOW }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 14400
       - run: bundle exec bin/build --image-id ${{ inputs.image_id }}
         id: build
-        timeout-minutes: 180
+        timeout-minutes: 240
