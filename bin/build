@@ -76,6 +76,7 @@ packer_build_cmd = [
   "packer", "build",
   options[:debug] ? "-debug" : nil,
   "-var", %{ami_regions=["us-east-1"]},
+  image['toolset_file'] ? ["-var", "toolset_file=#{image['toolset_file']}"] : nil,
   "-var", "ami_name=#{ami_name}",
   "-var", "image_os=#{dist}",
   "-var", "image_version=#{options[:image_version]}",
@@ -86,7 +87,7 @@ packer_build_cmd = [
   "-var", "volume_size=#{image.fetch('volume_size')}",
   "-var", "ami_description=#{image.fetch('description')}",
   packer_template_path
-].compact
+].compact.flatten
 
 puts "Running Packer init command: #{packer_init_cmd.join(' ')}"
 system({ "PACKER_LOG" => "0" }, *packer_init_cmd) or fail("Packer init failed")
