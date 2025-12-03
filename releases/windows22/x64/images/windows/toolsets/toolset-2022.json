@@ -136,7 +136,10 @@
     {
       "name": "Containers"
     },
-    { "name": "Hyper-V", "includeAllSubFeatures": true },
+    {
+      "name": "Hyper-V",
+      "includeAllSubFeatures": true
+    },
     {
       "name": "Microsoft-Windows-Subsystem-Linux",
       "optionalFeature": true
