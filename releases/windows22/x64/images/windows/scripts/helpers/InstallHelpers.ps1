@@ -1,3 +1,5 @@
+. "$PSScriptRoot\ToolsetHelpers.ps1"
+
 function Install-Binary {
     <#
     .SYNOPSIS
@@ -233,12 +235,23 @@ function Get-ToolsetContent {
 
     .DESCRIPTION
         This function reads the toolset.json file in path provided by IMAGE_FOLDER
-        environment variable and returns the content as a PowerShell object.
+        environment variable and returns the content as a PowerShell object. If an
+        optional toolset.overrides.json exists, it is deep-merged with the base
+        toolset.
     #>
 
     $toolsetPath = Join-Path $env:IMAGE_FOLDER "toolset.json"
     $toolsetJson = Get-Content -Path $toolsetPath -Raw
-    ConvertFrom-Json -InputObject $toolsetJson
+    $toolset = ConvertFrom-Json -InputObject $toolsetJson -Depth 100
+
+    $overridePath = Join-Path $env:IMAGE_FOLDER "toolset.overrides.json"
+    if (Test-Path $overridePath) {
+        $overrideJson = Get-Content -Path $overridePath -Raw
+        $overrideToolset = ConvertFrom-Json -InputObject $overrideJson -Depth 100
+        $toolset = Merge-ToolsetObject -Base $toolset -Override $overrideToolset
+    }
+
+    return $toolset
 }
 
 function Get-TCToolPath {

@@ -86,6 +86,14 @@ images:
     #source_ami_name: Windows_Server-2022-English-Core-Base-*
     source_ami_owner: 801119661308
     description: HeroDevs Windows2022 x64
+
+  - id: windows22-full-with-virt-x64
+    template: windows22-full-x64
+    volume_size: 50
+    source_ami_name: runs-on-v2.2-windows22-full-x64-*
+    source_ami_owner: 135269210855
+    toolset_overrides_file: toolset-2022-hyperv-overrides.json
+    description: HeroDevs Windows2022 with virtualization x64
   
   # Windows25
   - id: windows25-full-x64

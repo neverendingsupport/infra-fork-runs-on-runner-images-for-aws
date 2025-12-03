@@ -1,0 +1,15 @@
+{
+  "windowsFeatures": [
+    {
+      "name": "Hyper-V",
+      "includeAllSubFeatures": true
+    }
+  ],
+  "choco": {
+    "common_packages": [
+      {
+        "name": "docker"
+      }
+    ]
+  }
+}

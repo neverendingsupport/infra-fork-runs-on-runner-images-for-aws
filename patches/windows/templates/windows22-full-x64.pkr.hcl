@@ -42,6 +42,16 @@ variable "temp_dir" {
   default = "C:\\temp-to-delete"
 }
 
+variable "toolset_file" {
+  type    = string
+  default = "toolset-2022.json"
+}
+
+variable "toolset_overrides_file" {
+  type    = string
+  default = ""
+}
+
 variable "install_password" {
   type      = string
   default   = "P4ssw0rd@1234"
@@ -269,7 +279,8 @@ build {
       "Move-Item '${var.image_folder}\\scripts\\tests\\Helpers.psm1' '${var.helper_script_folder}\\TestsHelpers\\TestsHelpers.psm1'",
       "Move-Item '${var.image_folder}\\scripts\\tests' '${var.image_folder}\\tests'",
       "Remove-Item -Recurse '${var.image_folder}\\scripts'",
-      "Move-Item '${var.image_folder}\\toolsets\\toolset-2022.json' '${var.image_folder}\\toolset.json'",
+      "Move-Item '${var.image_folder}\\toolsets\\${var.toolset_file}' '${var.image_folder}\\toolset.json'",
+      "if ('${var.toolset_overrides_file}' -ne '') { Copy-Item '${var.image_folder}\\toolsets\\${var.toolset_overrides_file}' '${var.image_folder}\\toolset.overrides.json' }",
       "Remove-Item -Recurse '${var.image_folder}\\toolsets'"
     ]
   }
