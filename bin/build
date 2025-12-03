@@ -77,6 +77,7 @@ packer_build_cmd = [
   options[:debug] ? "-debug" : nil,
   "-var", %{ami_regions=["us-east-1"]},
   image['toolset_file'] ? ["-var", "toolset_file=#{image['toolset_file']}"] : nil,
+  image['toolset_overrides_file'] ? ["-var", "toolset_overrides_file=#{image['toolset_overrides_file']}"] : nil,
   "-var", "ami_name=#{ami_name}",
   "-var", "image_os=#{dist}",
   "-var", "image_version=#{options[:image_version]}",

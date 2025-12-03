@@ -92,7 +92,7 @@ images:
     volume_size: 50
     source_ami_name: runs-on-v2.2-windows22-full-x64-*
     source_ami_owner: 135269210855
-    toolset_file: toolset-2022-hyperv.json
+    toolset_overrides_file: toolset-2022-hyperv-overrides.json
     description: HeroDevs Windows2022 with virtualization x64
   
   # Windows25

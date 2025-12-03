@@ -47,6 +47,11 @@ variable "toolset_file" {
   default = "toolset-2022.json"
 }
 
+variable "toolset_overrides_file" {
+  type    = string
+  default = ""
+}
+
 variable "install_password" {
   type      = string
   default   = "P4ssw0rd@1234"
@@ -275,6 +280,7 @@ build {
       "Move-Item '${var.image_folder}\\scripts\\tests' '${var.image_folder}\\tests'",
       "Remove-Item -Recurse '${var.image_folder}\\scripts'",
       "Move-Item '${var.image_folder}\\toolsets\\${var.toolset_file}' '${var.image_folder}\\toolset.json'",
+      "if ('${var.toolset_overrides_file}' -ne '') { Copy-Item '${var.image_folder}\\toolsets\\${var.toolset_overrides_file}' '${var.image_folder}\\toolset.overrides.json' }",
       "Remove-Item -Recurse '${var.image_folder}\\toolsets'"
     ]
   }
