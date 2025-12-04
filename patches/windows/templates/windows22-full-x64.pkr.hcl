@@ -138,7 +138,14 @@ source "amazon-ebs" "build_ebs" {
   communicator                           = "winrm"
   winrm_insecure                         = "true"
   winrm_use_ssl                          = "true"
-  winrm_username                         = "Administrator"
+  #DS# winrm_username                         = "Administrator"
+
+  # Use the installer account we create, not the auto-generated Administrator password
+  winrm_username      = var.install_user
+  winrm_password      = var.install_password
+
+  # Don't wait for AWS to generate an Administrator password
+  skip_get_password   = true
 
   # https://learn.microsoft.com/en-us/windows/win32/winrm/installation-and-configuration-for-windows-remote-management
   user_data = <<EOF
