@@ -87,7 +87,7 @@ images:
     source_ami_owner: 801119661308
     description: HeroDevs Windows2022 x64
 
-  - id: windows22-full-with-virt-x64
+  - id: windows22-hyperv-x64
     template: windows22-full-x64
     volume_size: 50
     source_ami_name: runs-on-v2.2-windows22-full-x64-*
