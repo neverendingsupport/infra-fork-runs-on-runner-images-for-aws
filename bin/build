@@ -6,6 +6,7 @@ require 'slop'
 require 'fileutils'
 require 'yaml'
 require 'aws-sdk-ec2'
+require 'securerandom'
 
 IMAGES = YAML.load_file(File.expand_path("../config.yml", __dir__)).fetch("images")
 
@@ -72,6 +73,8 @@ packer_init_cmd = [
   "packer", "init",
   packer_template_path
 ]
+
+winrm_password = SecureRandom.urlsafe_base64(32)
 packer_build_cmd = [
   "packer", "build",
   options[:debug] ? "-debug" : nil,
@@ -87,13 +90,22 @@ packer_build_cmd = [
   "-var", "source_ami_owner=#{image.fetch('source_ami_owner')}",
   "-var", "volume_size=#{image.fetch('volume_size')}",
   "-var", "ami_description=#{image.fetch('description')}",
+  "-var", "winrm_password=#{winrm_password}",
   packer_template_path
 ].compact.flatten
 
 puts "Running Packer init command: #{packer_init_cmd.join(' ')}"
 system({ "PACKER_LOG" => "0" }, *packer_init_cmd) or fail("Packer init failed")
 
-puts "Running Packer build command: #{packer_build_cmd.join(' ')}"
+redacted_packer_build_cmd = packer_build_cmd.map do |arg|
+  if arg.is_a?(String) && arg.start_with?("winrm_password=")
+    "winrm_password=***"
+  else
+    arg
+  end
+end
+
+puts "Running Packer build command: #{redacted_packer_build_cmd.join(' ')}"
 
 unless system({ "PROJECT_ROOT" => File.expand_path("..", __dir__) }, *packer_build_cmd)
   # Cleanup any dangling EC2 instances

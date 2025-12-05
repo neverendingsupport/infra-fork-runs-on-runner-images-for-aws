@@ -63,6 +63,11 @@ variable "install_user" {
   default = "installer"
 }
 
+variable "winrm_password" {
+  type      = string
+  sensitive = true
+}
+
 variable "ami_name" {
   type    = string
   default = "${env("AMI_NAME")}"
@@ -139,6 +144,7 @@ source "amazon-ebs" "build_ebs" {
   winrm_insecure                         = "true"
   winrm_use_ssl                          = "true"
   winrm_username                         = "Administrator"
+  winrm_password                         = var.winrm_password
 
   # https://learn.microsoft.com/en-us/windows/win32/winrm/installation-and-configuration-for-windows-remote-management
   user_data = <<EOF
@@ -157,6 +163,9 @@ New-Item -Path WSMan:\LocalHost\Listener -Transport HTTPS -Address * -Certificat
 
 # Configure firewall
 New-NetFirewallRule -DisplayName "Windows Remote Management (HTTPS-In)" -Name "Windows Remote Management (HTTPS-In)" -Profile Any -LocalPort 5986 -Protocol TCP
+
+# Set a known Administrator password for the Packer build.
+net user Administrator "${var.winrm_password}"
 
 # Install sshd
 Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
