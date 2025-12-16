@@ -15,7 +15,8 @@ env:
 
 jobs:
   go-checks:
-    if: ${{ hashFiles('**/*.go') != '' }}
+    # this whole thing makes no sense.
+    #if: ${{ hashFiles('**/*.go') != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
