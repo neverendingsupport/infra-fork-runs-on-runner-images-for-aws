@@ -1,0 +1,84 @@
+name: Build Windows 2022 runner image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '0 9 * * 1'
+
+env:
+  IMAGE_ID: windows22-docker-hyperv-x64
+  AMI_PREFIX: herodevs
+
+jobs:
+  go-checks:
+    if: ${{ hashFiles('**/*.go') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Go build
+        run: go build ./...
+      - name: Go test
+        run: go test ./...
+
+  packer-build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: herodevs-runner-build
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Build image
+        env:
+          AMI_PREFIX: ${{ env.AMI_PREFIX }}
+          SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          bundle exec bin/build --image-id $IMAGE_ID
+
+  cleanup:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: herodevs-runner-cleanup
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Remove stale AMIs
+        env:
+          AMI_PREFIX: ${{ env.AMI_PREFIX }}
+          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: bundle exec bin/utils/cleanup-amis
