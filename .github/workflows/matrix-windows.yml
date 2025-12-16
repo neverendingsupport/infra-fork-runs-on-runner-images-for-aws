@@ -7,6 +7,7 @@ on:
   pull_request:
   schedule:
     - cron: '0 9 * * 1'
+  workflow_dispatch:
 
 env:
   IMAGE_ID: windows22-docker-hyperv-x64
