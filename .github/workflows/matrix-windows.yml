@@ -1,75 +1,86 @@
 name: Windows images
 
 on:
-  workflow_dispatch:
-    inputs:
-      images:
-        type: string
-        required: true
-        description: 'Distribution(s) to build'
-        default: '["windows22-hyperv-x64"]'
+  push:
+    branches:
+      - main
+  pull_request:
   schedule:
-    - cron: '0 6 */15 * *'
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+env:
+  IMAGE_ID: windows22-docker-hyperv-x64
+  AMI_PREFIX: herodevs
 
 jobs:
-  sync:
-    name: Synchronize
+  go-checks:
+    # this whole thing makes no sense.
+    #if: ${{ hashFiles('**/*.go') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Go build
+        run: go build ./...
+      - name: Go test
+        run: go test ./...
+
+  packer-build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       id-token: write
-    outputs:
-      release_name: ${{ steps.generate-release-name.outputs.release_name }}
+      contents: read
     steps:
-      - name: Generate release name
-        id: generate-release-name
-        run: echo "release_name=windows-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.2.2
+          ruby-version: '3.3'
+          bundler-cache: true
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: herodevs-runner-build
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Build image
+        env:
+          AMI_PREFIX: ${{ env.AMI_PREFIX }}
+          SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: |
+          bundle exec bin/build --image-id $IMAGE_ID
+
+  cleanup:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
           bundler-cache: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.aws_oidc_role_arn }}
-          role-session-name: ${{ env.GITHUB_WORKFLOW }}
-          aws-region: ${{ vars.AWS_REGION }}
-      - name: Cleanup dev AMIs
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: herodevs-runner-cleanup
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Remove stale AMIs
         env:
-          AMI_PREFIX: herodevs-windows
-        run: bundle exec bin/utils/cleanup-amis --force
-      #- name: Synchronize with upstream repository
-      #  run: bundle exec bin/sync
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          tagging_message: ""
-          commit_message: "Sync from upstream"
-
-  build-test-release:
-    name: Build/Test/Release ${{ matrix.image_id }}
-    needs: sync
-    strategy:
-      fail-fast: false
-      matrix:
-        image_id: ${{ fromJSON(github.event.inputs.images || '["windows22-hyperv-x64"]') }}
-    uses: ./.github/workflows/build-test-release.yml
-    secrets: inherit
-    with:
-      image_id: ${{ matrix.image_id }}
-      platform: windows
-
-  generate-release:
-    name: Generate release
-    needs:
-      - sync
-      - build-test-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          tag_name: ${{ needs.sync.outputs.release_name }}
-          make_latest: true
+          AMI_PREFIX: ${{ env.AMI_PREFIX }}
+          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+        run: bundle exec bin/utils/cleanup-amis

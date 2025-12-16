@@ -1,61 +1,29 @@
-# GitHub Actions runner images for AWS
+# HeroDevs Windows 2022 runner image
 
-GitHub Actions Runner images for AWS, to be used with [RunsOn](https://runs-on.com/?ref=runner-images-for-aws), or for your own usage.
+This fork builds a single Windows Server 2022 GitHub Actions runner image on AWS. It reuses the upstream images published by [runs-on/runner-images-for-aws](https://github.com/runs-on/runner-images-for-aws) and layers two changes on top via Packer:
 
-Official images are replicated and published every 15 days.
+- Installs Docker Desktop with Chocolatey so GitHub Actions can run `docker build` and related tooling out of the box.
+- Enables the Hyper-V Windows feature (and Containers) so virtualization workloads continue to run correctly.
 
-## Supported images
+Images are published with the `herodevs` AMI prefix and use the upstream `runs-on-v2.2-windows22-full-x64-*` images as the source AMI.
 
-### Linux
+## Building locally
 
-Those images are very close to 1-1 compatible with official GitHub Actions runner images. Some legacy or easily available through actions software has been removed to ensure faster boot times and lower disk usage.
+1. Install Packer and Ruby (Bundler will install dependencies from the included `Gemfile`).
+2. Configure AWS credentials and set a subnet that auto-assigns public IPs:
 
-* `ubuntu22-full-x64`
-* `ubuntu22-full-arm64`
-* `ubuntu24-full-x64`
-* `ubuntu24-full-arm64`
+```bash
+export AWS_DEFAULT_REGION=us-east-1
+export SUBNET_ID=subnet-xxxxxxxx
+export AMI_PREFIX=herodevs
+bundle install
+bundle exec bin/build --image-id windows22-docker-hyperv-x64
+```
 
-### Windows
+The `bin/build` helper copies the Packer template from `patches/windows/templates/windows22-docker-hyperv-x64.pkr.hcl` into the upstream release layout before invoking `packer build`.
 
-Those images are lacking the Hyper-V (and related tooling) framework for Windows, because virtualization on AWS is only available on bare-metal instances. Some legacy or easily available through actions software has been removed to ensure faster boot times and lower disk usage. A virtualization-enabled variant derived from the upstream Windows 2022 runner image is also available when Hyper-V is required.
+## Automation
 
-* `windows22-full-x64`
-* `windows22-hyperv-x64`
-* `windows25-full-x64`
+`.github/workflows/windows-runner.yml` builds the image on pull requests, pushes to `main`, and on a weekly schedule. The scheduled run also calls `bin/utils/cleanup-amis` to remove old AMIs that share the `herodevs` prefix.
 
-### GPU
-
-Those use the Linux images as base, and include NVidia GPU drivers, cuda toolkit, and container toolkit, version 12.
-
-* `ubuntu22-gpu-x64`
-* `ubuntu24-gpu-x64`
-
-## Supported regions
-
-- North Virginia (`us-east-1`)
-- Ohio (`us-east-2`)
-- Oregon (`us-west-2`)
-- Ireland (`eu-west-1`)
-- London (`eu-west-2`)
-- Paris (`eu-west-3`)
-- Frankfurt (`eu-central-1`)
-- Mumbai (`ap-south-1`)
-- Tokyo (`ap-northeast-1`)
-- Singapore (`ap-southeast-1`)
-- Sydney (`ap-southeast-2`)
-
-## Find the AMI
-
-For the `x86_64` image, search for:
-
-*  name: `runs-on-v2.2-<IMAGE_ID>-*`
-*  owner: `135269210855`
-
-For instance, for the `ubuntu22-full-x64` image, search for:
-
-*  name: `runs-on-v2.2-ubuntu22-full-x64-*`
-*  owner: `135269210855`
-
-## Notes
-
-* SSH daemon is disabled by default, so be sure to enable it in a user-data script if needed.
+A lightweight Go build/test job is included and runs when Go sources are present so downstream changes can add Go-based helpers without breaking the pipeline.
