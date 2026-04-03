@@ -36,13 +36,13 @@ jobs:
       - name: Verify AMI name
         run: |
           echo "${{ inputs.ami_name }}" | grep "${{ inputs.image_id }}"
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
+      - uses: ruby/setup-ruby@3ff19f5e2baf30647122352b96108b1fbe250c64 # ratchet:ruby/setup-ruby@v1
         with:
           ruby-version: 3.2.2
           bundler-cache: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # ratchet:aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.aws_oidc_role_arn }}
           role-session-name: ${{ env.GITHUB_WORKFLOW }}
